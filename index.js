@@ -10,8 +10,36 @@ const createServer = (port) => {
     app.use(cors());
     app.use(express.json());
 
+    // Middleware de log
+    app.use((req, res, next) => {
+        console.log(`[${port}] ${req.method} ${req.path}`);
+        next();
+    });
+
+    // Rotas da API
     app.get('/', (req, res) => {
-        res.send(`Server running on port ${port}`);
+        res.json({ message: `API running on port ${port}`, status: 'active' });
+    });
+
+    app.get('/health', (req, res) => {
+        res.json({ status: 'healthy', port });
+    });
+
+    // Rota para receber dados de outro projeto
+    app.post('/data', (req, res) => {
+        try {
+            const data = req.body;
+            console.log(`Received data on port ${port}:`, data);
+            res.json({ success: true, message: 'Data received', port });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    });
+
+    // Error handling
+    app.use((err, req, res, next) => {
+        console.error(`Error on port ${port}:`, err);
+        res.status(500).json({ error: 'Internal server error' });
     });
 
     app.listen(port, '0.0.0.0', () => {
@@ -22,3 +50,11 @@ const createServer = (port) => {
 };
 
 const servers = PORTS.map(createServer);
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('Shutting down servers...');
+    servers.forEach(() => {
+        server.close();
+    });
+});
