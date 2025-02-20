@@ -7,10 +7,11 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Middleware de log
+// Middleware de log melhorado
 app.use((req, res, next) => {
-    console.log(`[${PORT}] ${req.method} ${req.path}`);
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
     next();
 });
 
